@@ -1,0 +1,16 @@
+# Dipendenze
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# File di configurazione locale e credenziali
+.env
+backend/.env
+
+# Build di produzione del frontend
+frontend/dist/
+frontend/build/
+
+# File di sistema
+.DS_Store
+Thumbs.db
