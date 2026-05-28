@@ -38,7 +38,7 @@ router.post('/register', async (req, res) => {   //funzione asincrona (richiede 
 });
 
 
-//APi login
+//API login
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;

@@ -37,7 +37,7 @@ const squadraIscrittaSchema = new mongoose.Schema({
     }
 });
 
-//Definisco lo schema per i tornei
+//Definisco lo schema innestato per i tornei
 const torneoSchema = new mongoose.Schema({
     nome: {
         type: String,
@@ -46,7 +46,7 @@ const torneoSchema = new mongoose.Schema({
     },
     organizzatore: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', //Referenza che punta all' id del gestore
+        ref: 'User',  //Referenza che punta all' id del gestore
         required: true
     },
     squadreIscritte: [squadraIscrittaSchema],
@@ -57,7 +57,7 @@ const torneoSchema = new mongoose.Schema({
     },
     isVisibile: {
         type: Boolean,
-        default: true // Permette all'Admin di oscurare tornei non conformi [cite: 133]
+        default: true 
     }
 }, {
     timestamps: true  //tengo traccia della creazione
