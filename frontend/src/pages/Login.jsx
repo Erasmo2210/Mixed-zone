@@ -22,8 +22,8 @@ export default function Login() {
             //effettuo il login
             const utenteLoggato = await login(email, password);
             
-            if (utenteLoggato.role === 'Admin') navigate('/');
-            else if (utenteLoggato.role === 'Gestore') navigate('/');    //DA METTERE LE ROTTE --------------------------------------------------------
+            if (utenteLoggato.role === 'Admin') navigate('/dashboard');
+            else if (utenteLoggato.role === 'Gestore') navigate('/dashboard');    
             else navigate('/');
         } catch (err) {
             setErrore(err.message);

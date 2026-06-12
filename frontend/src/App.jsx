@@ -2,10 +2,12 @@ import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Container, AppBar, Toolbar, CircularProgress } from '@mui/material';
 import { AuthContext } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute'; //importo la protezione delle rotte
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Campi from './pages/Campi';
 import Partite from './pages/Partite';
+import Dashboard from './pages/Dashboard';
 
 //Inizializzazione della homepage
 const HomePlaceholder = () => {
@@ -43,6 +45,13 @@ const NavigationBar = () => {
                     <Button component={Link} to="/partite" color="inherit">Trova Partite</Button>
                     
                     {/* Cambio l'interfaccia in base allo stato utente */}
+
+                    {user && (user.role === 'Gestore' || user.role === 'Admin') ? (   //&& serve per controllare se user esiste
+                        <Button component={Link} to="/dashboard" variant="contained" color="primary">
+                            Pannello Gestione
+                        </Button>
+                    ) : null}
+
                     {user ? (
                         <>
                             <Typography variant="body2" sx={{ fontStyle: 'italic', opacity: 0.8 }}>
@@ -83,6 +92,11 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/campi" element={<Campi />} /> 
                 <Route path="/partite" element={<Partite />} />
+                <Route path="/dashboard" element={
+                    <ProtectedRoute allowedRoles={['Gestore', 'Admin']}>     {/* Route protetta da ProtectedRoute */}
+                        <Dashboard />
+                    </ProtectedRoute>
+                } />
             </Routes>
         </Router>
     );

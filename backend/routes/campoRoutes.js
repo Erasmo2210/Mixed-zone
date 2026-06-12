@@ -29,7 +29,17 @@ router.post('/', verificaToken, isGestore, async (req, res) => {  //middleware d
 //API ricerca tutti i campi
 router.get('/', verificaToken, async (req, res) => {
     try {
-        const campi = await Campo.find({ isVisibile: true }).populate('gestore', 'name email'); //con populate mostro nome ed email del gestore invece dell'id
+        const utenteLoggato = req.user;
+        let query = {}; //non filtro nulla di base
+
+        if (utenteLoggato.role === 'Gestore') {
+            query = { gestore: utenteLoggato._id };
+        }
+        else if (utenteLoggato.role === 'Cliente') {
+            query = { isVisibile: true };
+        }
+
+        const campi = await Campo.find(query).populate('gestore', 'name email'); //con populate mostro nome ed email del gestore invece dell'id
         res.json(campi);
     } catch (error) {
         res.status(500).json({ message: 'Errore nel recupero dei campi.', error: error.message });
@@ -51,6 +61,13 @@ router.put('/:id', verificaToken, isGestore, async (req, res) => {
         //Controllo il gestore
         if (campo.gestore.toString() !== req.user._id.toString()) {  //toString per confrontare i due ObjectId come stringhe, altirmenti controllerebbe indirizzi in memoria
             return res.status(403).json({ message: 'Azione negata. Non sei il proprietario di questo campo.' });
+        }
+
+        //Controllo chi ha oscurato il campo in passato prima di cambiarlo
+        if (isVisibile === true && campo.oscuratoDaAdmin === true) {
+            return res.status(403).json({ 
+                message: 'Azione negata. Questo impianto è stato oscurato dall\'Amministratore' 
+            });
         }
 
         //Aggiorno i campi passati nella richiesta, se non presenti li lascio uguali

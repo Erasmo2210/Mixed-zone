@@ -29,6 +29,10 @@ const campoSchema = new mongoose.Schema({
     isVisibile: {
         type: Boolean,
         default: true //Stato di visibilità del campo
+    },
+    oscuratoDaAdmin: {
+    type: Boolean,
+    default: false 
     }
 }, {
     timestamps: true //tengo traccia della creazione

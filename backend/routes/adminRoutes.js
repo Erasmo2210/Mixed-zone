@@ -36,9 +36,10 @@ router.put('/utenti/:id/stato', verificaToken, isAdmin, async (req, res) => {
 });
 
 //API moderazione campi da calcio
-router.put('/campi/:id/oscura', verificaToken, isAdmin, async (req, res) => {
+router.put('/campi/:id/oscura', verificaToken, async (req, res) => {
     try {
-        const { isVisibile } = req.body;
+        const { isVisibile, oscuratoDaAdmin } = req.body;
+        const utenteLoggato = req.user; //ottengo l'utente loggato
 
         if (isVisibile === undefined) {
             return res.status(400).json({ message: 'Il campo isVisibile è obbligatorio.' });
@@ -49,7 +50,28 @@ router.put('/campi/:id/oscura', verificaToken, isAdmin, async (req, res) => {
             return res.status(404).json({ message: 'Campo da calcio non trovato.' });
         }
 
+        if (utenteLoggato.role === 'Gestore') {
+            if (campo.gestore.toString() !== utenteLoggato._id.toString()) {
+                return res.status(403).json({ message: 'Accesso negato. Non sei il proprietario di questo campo.' });
+            }
+
+            if (campo.oscuratoDaAdmin === true && isVisibile === true) {
+                return res.status(403).json({ 
+                    message: "Operazione negata. Questo campo è stato bloccato dall'amministratore e non può essere riattivato da te." 
+                });
+            }
+        }
+
         campo.isVisibile = isVisibile;
+
+        if (utenteLoggato.role === 'Admin') {
+            if (oscuratoDaAdmin !== undefined) {
+                campo.oscuratoDaAdmin = oscuratoDaAdmin;
+            } else {
+                campo.oscuratoDaAdmin = !isVisibile; 
+            }
+        }
+
         await campo.save();
 
         const stato = isVisibile ? 'reso visibile' : 'oscurato';
