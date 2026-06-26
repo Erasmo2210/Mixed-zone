@@ -18,14 +18,17 @@ router.post('/register', async (req, res) => {   //funzione asincrona (richiede 
 
         //Hashing della password
         const salt = await bcrypt.genSalt(10); //Genero una stringa casuale nella pw
-        const hashedPassword = await bcrypt.hash(password, salt); 
+        const hashedPassword = await bcrypt.hash(password, salt);
 
         //Creo il nuovo utente
+        const ruoliPermessi = ['Cliente', 'Gestore'];
+        const ruoloFinale = ruoliPermessi.includes(role) ? role : 'Cliente';
+
         const nuovoUtente = new User({
             name,
             email,
-            password: hashedPassword, 
-            role: role || 'Cliente'   //Default "Cliente" se non specificato
+            password: hashedPassword,
+            role: ruoloFinale   //Default "Cliente" se non specificato
         });
 
         //Salvo l'utente registrato nel db
@@ -66,7 +69,7 @@ router.post('/login', async (req, res) => {
             { id: user._id, role: user.role },  //mantengo id e ruolo
             process.env.JWT_SECRET,  //chiave segreta da .env
             { expiresIn: '24h' }  //scadenza del token
-        ); 
+        );
 
         //Risposta al frontend
         res.json({

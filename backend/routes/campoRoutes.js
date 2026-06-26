@@ -15,7 +15,7 @@ router.post('/', verificaToken, isGestore, async (req, res) => {  //middleware d
             posizione,
             prezzoAllOra,
             capienza,
-            gestore: req.user._id 
+            gestore: req.user._id
         });
 
         await nuovoCampo.save();
@@ -51,9 +51,9 @@ router.get('/', verificaToken, async (req, res) => {
 router.put('/:id', verificaToken, isGestore, async (req, res) => {
     try {
         const { nome, posizione, prezzoAllOra, isVisibile, capienza } = req.body;
-        
+
         //Ricerco il campo
-        const campo = await Campo.findById(req.id || req.params.id); //recupero i dati o dall' id passato come parametro o da quello estratto dal token
+        const campo = await Campo.findById(req.params.id); //recupero i dati o dall' id passato come parametro
         if (!campo) {
             return res.status(404).json({ message: 'Campo da calcio non trovato.' });
         }
@@ -65,8 +65,8 @@ router.put('/:id', verificaToken, isGestore, async (req, res) => {
 
         //Controllo chi ha oscurato il campo in passato prima di cambiarlo
         if (isVisibile === true && campo.oscuratoDaAdmin === true) {
-            return res.status(403).json({ 
-                message: 'Azione negata. Questo impianto è stato oscurato dall\'Amministratore' 
+            return res.status(403).json({
+                message: 'Azione negata. Questo impianto è stato oscurato dall\'Amministratore'
             });
         }
 

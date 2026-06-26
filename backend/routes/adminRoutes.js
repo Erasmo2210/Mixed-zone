@@ -9,9 +9,9 @@ const { verificaToken, isAdmin } = require('../middleware/auth');
 //API moderazione utenti
 router.put('/utenti/:id/stato', verificaToken, isAdmin, async (req, res) => {
     try {
-        const { isActive } = req.body; 
+        const { isActive } = req.body;
 
-        if (isActive === undefined) {  
+        if (isActive === undefined) {
             return res.status(400).json({ message: 'Il campo isActive è obbligatorio nel body.' });
         }
 
@@ -41,6 +41,10 @@ router.put('/campi/:id/oscura', verificaToken, async (req, res) => {
         const { isVisibile, oscuratoDaAdmin } = req.body;
         const utenteLoggato = req.user; //ottengo l'utente loggato
 
+        if (utenteLoggato.role !== 'Admin' && utenteLoggato.role !== 'Gestore') {  //non faccio accedere ai clienti alla sezione modifica visibilità
+            return res.status(403).json({ message: 'Accesso negato. Solo Admin e Gestori possono modificare i campi.' });
+        }
+
         if (isVisibile === undefined) {
             return res.status(400).json({ message: 'Il campo isVisibile è obbligatorio.' });
         }
@@ -56,8 +60,8 @@ router.put('/campi/:id/oscura', verificaToken, async (req, res) => {
             }
 
             if (campo.oscuratoDaAdmin === true && isVisibile === true) {
-                return res.status(403).json({ 
-                    message: "Operazione negata. Questo campo è stato bloccato dall'amministratore e non può essere riattivato da te." 
+                return res.status(403).json({
+                    message: "Operazione negata. Questo campo è stato bloccato dall'amministratore e non può essere riattivato da te."
                 });
             }
         }
@@ -68,7 +72,7 @@ router.put('/campi/:id/oscura', verificaToken, async (req, res) => {
             if (oscuratoDaAdmin !== undefined) {
                 campo.oscuratoDaAdmin = oscuratoDaAdmin;
             } else {
-                campo.oscuratoDaAdmin = !isVisibile; 
+                campo.oscuratoDaAdmin = !isVisibile;
             }
         }
 

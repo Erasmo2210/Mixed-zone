@@ -14,7 +14,7 @@ router.post('/', verificaToken, isCliente, async (req, res) => {
             ora,
             organizzatore: req.user._id,
             giocatoriIscritti: [req.user._id], //array di partecipanti
-            maxGiocatori: maxGiocatori || 10
+            giocatoriRichiesti: maxGiocatori || 10
         });
 
         await nuovaPartita.save();
@@ -52,7 +52,7 @@ router.post('/:id/unisciti', verificaToken, isCliente, async (req, res) => {
         }
 
         //Controllo se il cliente è già iscritto a questa partita
-        if (partita.giocatoriIscritti.includes(req.user._id)) {
+        if (partita.giocatoriIscritti.some(id => id.toString() === req.user._id.toString())) { //converto l'id in stringa per fre il confronto
             return res.status(400).json({ message: 'Ti sei già iscritto a questa partita.' });
         }
 
@@ -60,7 +60,7 @@ router.post('/:id/unisciti', verificaToken, isCliente, async (req, res) => {
         partita.giocatoriIscritti.push(req.user._id);
 
         //Se la partita raggiunge il limite massimo, cambio lo stato della partita
-        if (partita.giocatoriIscritti.length >= partita.maxGiocatori) {
+        if (partita.giocatoriIscritti.length >= partita.giocatoriRichiesti) {
             partita.statoPartita = 'Al completo';
         }
 
@@ -72,7 +72,7 @@ router.post('/:id/unisciti', verificaToken, isCliente, async (req, res) => {
         req.io.emit('lobbyAggiornata', partitaAggiornata); //l'evento emit invia dati ai client in ascolto, lobby l'etichetta
 
         //aggiorno partita con quella aggiornata
-        res.json({ message: 'Ti sei unito alla partita con successo', partita: partitaAggiornata }); 
+        res.json({ message: 'Ti sei unito alla partita con successo', partita: partitaAggiornata });
     } catch (error) {
         res.status(500).json({ message: 'Errore durante l\'iscrizione alla partita.', error: error.message });
     }

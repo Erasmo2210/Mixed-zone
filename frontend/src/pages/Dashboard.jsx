@@ -15,7 +15,7 @@ export default function Dashboard() {
     const [tipologia, setTipologia] = useState('5vs5');
     const [prezzo, setPrezzo] = useState('');
 
-    
+
     const caricaDatiDashboard = async () => {
         try {
             const dati = await apiFetch('/campi');
@@ -67,11 +67,11 @@ export default function Dashboard() {
             const nuovoStatoVisibile = !statoAttuale;
 
             const datiDaInviare = {
-            isVisibile: nuovoStatoVisibile
+                isVisibile: nuovoStatoVisibile
             };
 
             if (isAdmin) {
-            datiDaInviare.oscuratoDaAdmin = !nuovoStatoVisibile;
+                datiDaInviare.oscuratoDaAdmin = !nuovoStatoVisibile;
             }
 
             await apiFetch(`/admin/campi/${campoId}/oscura`, {
@@ -153,13 +153,13 @@ export default function Dashboard() {
                                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Prezzo orario</TableCell>
                                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Indirizzo</TableCell>
                                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Stato</TableCell>
-                                    <TableCell sx={{ color: 'white', fontWeight: 'bold', align: 'right' }}>Azioni</TableCell>
+                                    <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold' }}>Azioni</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {campi.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center">Nessun campo presente nel sistema</TableCell>
+                                        <TableCell colSpan={6} align="center">Nessun campo presente nel sistema</TableCell>
                                     </TableRow>
                                 ) : (
                                     campi.map((campo) => (
@@ -177,8 +177,8 @@ export default function Dashboard() {
                                             </TableCell>
                                             <TableCell align="right">
                                                 {user?.role === 'Admin' ? (
-                                                    <Button 
-                                                        variant="contained" 
+                                                    <Button
+                                                        variant="contained"
                                                         color={campo.isVisibile !== false ? "error" : "success"}
                                                         size="small"
                                                         onClick={() => CambioVisibilita(campo._id, campo.isVisibile !== false)}
@@ -186,8 +186,8 @@ export default function Dashboard() {
                                                         {campo.isVisibile !== false ? "Modera / Oscura" : "Riattiva"}
                                                     </Button>
                                                 ) : (
-                                                    <Button 
-                                                        variant="outlined" 
+                                                    <Button
+                                                        variant="outlined"
                                                         color={campo.isVisibile !== false ? "error" : "success"}
                                                         size="small"
                                                         onClick={() => CambioVisibilita(campo._id, campo.isVisibile !== false)}

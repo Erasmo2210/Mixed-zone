@@ -23,7 +23,7 @@ export default function Campi() {
             try {
                 //get per ottenere i campi
                 const dati = await apiFetch('/campi');
-                setCampi(dati.filter(campo => campo.isVisibile == true));
+                setCampi(dati.filter(campo => campo.isVisibile === true));
             } catch (err) {
                 setErrore('Impossibile caricare l\'elenco dei campi sportivi.');
             } finally {               //finally nelle promise fa eseguire sempre e comunque l'azione che contiene
@@ -68,12 +68,12 @@ export default function Campi() {
                 body: JSON.stringify({
                     campoId: campoSelezionato._id,
                     data: dataPrenotazione,
-                    ora: oraPrenotazione
+                    oraInizio: oraPrenotazione
                 })
             });
 
             setSuccessoPrenotazione('Prenotazione confermata con successo');
-            
+
             setTimeout(() => {
                 chiudiFinestraPrenotazione();
             }, 1500);
@@ -116,18 +116,18 @@ export default function Campi() {
                             <CardContent sx={{ flexGrow: 1 }}>
                                 <Typography variant="h6" fontWeight="bold" gutterBottom>{campo.nome}</Typography>
                                 <Typography variant="subtitle2" color="primary" gutterBottom>
-                                    Tipologia: {campo.tipologia}
+                                    Tipologia: {campo.capienza}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Prezzo orario: €{campo.prezzoOrario}
+                                    Prezzo orario: €{campo.prezzoAllOra}
                                 </Typography>
                             </CardContent>
                             <CardActions sx={{ p: 2, pt: 0 }}>
                                 {/* Solo i Clienti vedono abilitato il tasto prenota */}
                                 {user && user.role === 'Cliente' ? (
-                                    <Button 
-                                        fullWidth 
-                                        variant="contained" 
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
                                         color="primary"
                                         onClick={() => apriFinestraPrenotazione(campo)}
                                     >
@@ -144,14 +144,14 @@ export default function Campi() {
                 ))}
             </Grid>
 
-            
-            
+
+
             {/* Modale di prenotazione */}
             <Dialog open={modalAperto} onClose={chiudiFinestraPrenotazione} fullWidth maxWidth="xs">
                 <DialogTitle fontWeight="bold" color="secondary.main">
                     Prenotazione: {campoSelezionato?.nome}
                 </DialogTitle>
-                
+
                 <Box component="form" onSubmit={InviaPrenotazione} noValidate>
                     <DialogContent dividers>
                         {errorePrenotazione && <Alert severity="error" sx={{ mb: 2 }}>{errorePrenotazione}</Alert>}
@@ -190,7 +190,7 @@ export default function Campi() {
                             <MenuItem value="22:00">22:00 - 23:00</MenuItem>
                         </TextField>
                     </DialogContent>
-                    
+
                     <DialogActions sx={{ p: 2 }}>
                         <Button onClick={chiudiFinestraPrenotazione} color="inherit">Annulla</Button>
                         <Button type="submit" variant="contained" color="primary" disabled={!!successoPrenotazione}>
