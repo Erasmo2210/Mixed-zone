@@ -21,6 +21,10 @@ const partitaSchema = new mongoose.Schema({
         ref: 'User', //Referenza che punta all' id del cliente organizzatore
         required: true
     },
+    prenotazione: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Prenotazione'
+    },
     giocatoriIscritti: [{  //Array di ID dei clienti che si uniscono progressivamente
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'  //Referenza a quegli utenti

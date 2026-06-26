@@ -6,7 +6,7 @@ import { Container, Card, CardContent, TextField, Button, Typography, Alert, Box
 export default function Register() {
 
     const { register } = useContext(AuthContext); //utilizza register da AuthContext
-    const navigate = useNavigate();  //utilizza login da AuthContext
+    const navigate = useNavigate();  // Per il reindirizzamento dinamico delle rotte
 
     //inizializzazione degli stati dei campi
     const [name, setName] = useState('');
@@ -69,7 +69,7 @@ export default function Register() {
 
                         {/* Link per andare alla login */}
                         <Typography variant="body2" align="center">
-                            Hai già un account? <Link to="/login" style={{ color: '#2e7d32', fontWeight: 'bold' }}>Accedi</Link>
+                            Hai già un account? <Link to="/login" style={{ color: '#0284c7', fontWeight: 'bold' }}>Accedi</Link>
                         </Typography>
                     </Box>
                 </CardContent>

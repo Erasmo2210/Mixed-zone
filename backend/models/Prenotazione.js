@@ -23,8 +23,16 @@ const prenotazioneSchema = new mongoose.Schema({
     },
     stato: {
         type: String,
-        enum: ['Confermata', 'Annullata'], //stato della prenotazione 
-        default: 'Confermata'
+        enum: ['Confermata', 'In attesa di conferma dal gestore', 'In attesa di giocatori', 'Rifiutata', 'Scaduta'],
+        default: 'In attesa di conferma dal gestore'
+    },
+    giocatoriSufficienti: {
+        type: Boolean,
+        default: false
+    },
+    giocatoriMancanti: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true //tengo traccia della creazione

@@ -1,20 +1,40 @@
 const express = require('express');
 const router = express.Router();
 const Partita = require('../models/Partita');
+const Campo = require('../models/Campo');
+const Prenotazione = require('../models/Prenotazione');
 const { verificaToken, isCliente } = require('../middleware/auth');
 
 //API creazione partita
 router.post('/', verificaToken, isCliente, async (req, res) => {
     try {
-        const { campoId, data, ora, maxGiocatori } = req.body;
+        const { campoId, data, ora, maxGiocatori, prenotazioneId } = req.body;
+
+        //Verifico se il campo esiste ed è visibile
+        const campo = await Campo.findOne({ _id: campoId, isVisibile: true });
+        if (!campo) {
+            return res.status(404).json({ message: 'Campo non disponibile o inesistente.' });
+        }
+
+        let prenotazioneAssociata = null;
+        if (prenotazioneId) {
+            prenotazioneAssociata = await Prenotazione.findById(prenotazioneId);
+            if (!prenotazioneAssociata) {
+                return res.status(404).json({ message: 'Prenotazione non trovata.' });
+            }
+            if (prenotazioneAssociata.stato !== 'Confermata') {
+                return res.status(400).json({ message: 'La prenotazione deve essere confermata per aprire una partita.' });
+            }
+        }
 
         const nuovaPartita = new Partita({
             campo: campoId,
             data: new Date(data),
             ora,
             organizzatore: req.user._id,
-            giocatoriIscritti: [req.user._id], //array di partecipanti
-            giocatoriRichiesti: maxGiocatori || 10
+            giocatoriIscritti: [req.user._id],
+            giocatoriRichiesti: maxGiocatori || 10,
+            prenotazione: prenotazioneAssociata?._id
         });
 
         await nuovaPartita.save();
@@ -59,9 +79,17 @@ router.post('/:id/unisciti', verificaToken, isCliente, async (req, res) => {
         //Aggiungo il cliente all'array dei partecipanti
         partita.giocatoriIscritti.push(req.user._id);
 
-        //Se la partita raggiunge il limite massimo, cambio lo stato della partita
-        if (partita.giocatoriIscritti.length >= partita.giocatoriRichiesti) {
+        const giocatoriExtra = partita.giocatoriIscritti.length - 1;
+        if (giocatoriExtra >= partita.giocatoriRichiesti) {
             partita.statoPartita = 'Al completo';
+
+            if (partita.prenotazione) {
+                const prenotazioneCollegata = await Prenotazione.findById(partita.prenotazione);
+                if (prenotazioneCollegata && prenotazioneCollegata.stato === 'In attesa di giocatori') {
+                    prenotazioneCollegata.stato = 'In attesa di conferma dal gestore';
+                    await prenotazioneCollegata.save();
+                }
+            }
         }
 
         await partita.save();

@@ -14,8 +14,12 @@ export default function Campi() {
     const [campoSelezionato, setCampoSelezionato] = useState(null);
     const [dataPrenotazione, setDataPrenotazione] = useState('');
     const [oraPrenotazione, setOraPrenotazione] = useState('');
+    const [giocatoriSufficienti, setGiocatoriSufficienti] = useState('');
+    const [giocatoriMancanti, setGiocatoriMancanti] = useState('');
     const [errorePrenotazione, setErrorePrenotazione] = useState('');
     const [successoPrenotazione, setSuccessoPrenotazione] = useState('');
+    const [ricerca, setRicerca] = useState('');
+    const [tipologiaFiltro, setTipologiaFiltro] = useState('tutte');
 
     //useEffect esegue il codice che contiene automaticamente quando si verifica una condizione, qui all'avvio
     useEffect(() => {
@@ -47,6 +51,8 @@ export default function Campi() {
         setCampoSelezionato(null);
         setDataPrenotazione('');
         setOraPrenotazione('');
+        setGiocatoriSufficienti('');
+        setGiocatoriMancanti('');
     }
 
     //invio al backend della prenotazione
@@ -56,8 +62,13 @@ export default function Campi() {
         setSuccessoPrenotazione('');
 
         //valido a frontend data e ora
-        if (!dataPrenotazione || !oraPrenotazione) {
-            setErrorePrenotazione('Seleziona sia la data che l\'orario del match.');
+        if (!dataPrenotazione || !oraPrenotazione || giocatoriSufficienti === '') {
+            setErrorePrenotazione('Seleziona data, orario e la disponibilità dei giocatori.');
+            return;
+        }
+
+        if (giocatoriSufficienti === 'no' && !giocatoriMancanti) {
+            setErrorePrenotazione('Indica quanti giocatori mancano.');
             return;
         }
 
@@ -68,11 +79,13 @@ export default function Campi() {
                 body: JSON.stringify({
                     campoId: campoSelezionato._id,
                     data: dataPrenotazione,
-                    oraInizio: oraPrenotazione
+                    oraInizio: oraPrenotazione,
+                    giocatoriSufficienti: giocatoriSufficienti === 'si',
+                    giocatoriMancanti: Number(giocatoriMancanti || 0)
                 })
             });
 
-            setSuccessoPrenotazione('Prenotazione confermata con successo');
+            setSuccessoPrenotazione('Prenotazione inviata con successo.');
 
             setTimeout(() => {
                 chiudiFinestraPrenotazione();
@@ -82,6 +95,19 @@ export default function Campi() {
             setErrorePrenotazione(err.message);
         }
     };
+
+    const campiFiltrati = (campi || []).filter((campo) => {
+        if (!user || user.role !== 'Cliente') return true;
+
+        const termine = ricerca.trim().toLowerCase();
+        const corrispondeRicerca = !termine ||
+            (campo.nome || '').toLowerCase().includes(termine) ||
+            (campo.posizione || '').toLowerCase().includes(termine);
+
+        const corrispondeTipologia = !tipologiaFiltro || tipologiaFiltro === 'tutte' || campo.capienza === tipologiaFiltro;
+
+        return corrispondeRicerca && corrispondeTipologia;
+    });
 
     if (loading) {
         return (
@@ -102,18 +128,36 @@ export default function Campi() {
 
             {errore && <Alert severity="error" sx={{ mb: 3 }}>{errore}</Alert>}
 
+            {user && user.role === 'Cliente' && (
+                <Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+                    <TextField
+                        fullWidth
+                        label="Cerca per nome o indirizzo"
+                        value={ricerca}
+                        onChange={(event) => setRicerca(event.target.value)}
+                        placeholder="Scrivi il nome o l'indirizzo"
+                    />
+                    <TextField
+                        select
+                        sx={{ minWidth: { xs: '100%', md: 220 } }}
+                        label="Tipologia"
+                        value={tipologiaFiltro}
+                        onChange={(event) => setTipologiaFiltro(event.target.value)}
+                    >
+                        <MenuItem value="tutte">Tutte le tipologie</MenuItem>
+                        <MenuItem value="5vs5">5vs5</MenuItem>
+                        <MenuItem value="7vs7">7vs7</MenuItem>
+                        <MenuItem value="11vs11">11vs11</MenuItem>
+                    </TextField>
+                </Box>
+            )}
+
             {/* Layout a Griglia Responsive */}
             <Grid container spacing={3}>
-                {campi.map((campo) => (
+                {campiFiltrati.map((campo) => (
                     <Grid item key={campo._id} xs={12} sm={6} md={4}>
                         <Card elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <CardMedia
-                                component="img"
-                                height="160"
-                                image={campo.immagine || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=500'}
-                                alt={campo.nome}
-                            />
-                            <CardContent sx={{ flexGrow: 1 }}>
+                            <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <Typography variant="h6" fontWeight="bold" gutterBottom>{campo.nome}</Typography>
                                 <Typography variant="subtitle2" color="primary" gutterBottom>
                                     Tipologia: {campo.capienza}
@@ -135,7 +179,7 @@ export default function Campi() {
                                     </Button>
                                 ) : (
                                     <Button fullWidth variant="outlined" color="secondary" disabled>
-                                        {user ? 'Inibito ai Gestori/Admin' : 'Accedi come cliente per renotare'}
+                                        {user ? 'Inibito ai Gestori/Admin' : 'Accedi come cliente per prenotare'}
                                     </Button>
                                 )}
                             </CardActions>
@@ -189,6 +233,40 @@ export default function Campi() {
                             <MenuItem value="21:00">21:00 - 22:00</MenuItem>
                             <MenuItem value="22:00">22:00 - 23:00</MenuItem>
                         </TextField>
+
+                        <TextField
+                            select
+                            margin="normal"
+                            required
+                            fullWidth
+                            label="Ci sono già i giocatori sufficienti?"
+                            value={giocatoriSufficienti}
+                            onChange={(event) => {
+                                setGiocatoriSufficienti(event.target.value);
+                                if (event.target.value === 'si') setGiocatoriMancanti('');
+                            }}
+                        >
+                            <MenuItem value="si">Sì</MenuItem>
+                            <MenuItem value="no">No</MenuItem>
+                        </TextField>
+
+                        {giocatoriSufficienti === 'no' && (
+                            <TextField
+                                select
+                                margin="normal"
+                                required
+                                fullWidth
+                                label="Quanti giocatori mancano?"
+                                value={giocatoriMancanti}
+                                onChange={(event) => setGiocatoriMancanti(event.target.value)}
+                            >
+                                {Array.from({ length: campoSelezionato?.capienza === '7vs7' ? 13 : campoSelezionato?.capienza === '11vs11' ? 21 : 9 }, (_, index) => (
+                                    <MenuItem key={index + 1} value={index + 1}>
+                                        {index + 1}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        )}
                     </DialogContent>
 
                     <DialogActions sx={{ p: 2 }}>

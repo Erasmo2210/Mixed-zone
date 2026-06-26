@@ -24,7 +24,7 @@ export default function Login() {
             
             if (utenteLoggato.role === 'Admin') navigate('/dashboard');
             else if (utenteLoggato.role === 'Gestore') navigate('/dashboard');    
-            else navigate('/');
+            else navigate('/campi');
         } catch (err) {
             setErrore(err.message);
         }
@@ -66,7 +66,7 @@ export default function Login() {
 
                         {/* Link di registrazione */}
                         <Typography variant="body2" align="center">
-                            Non hai un account? <Link to="/register" style={{ color: '#2e7d32', fontWeight: 'bold' }}>Registrati qui</Link>  {/*Link di React Router che porta all'endpoint di registrazion*/}
+                            Non hai un account? <Link to="/register" style={{ color: '#0284c7', fontWeight: 'bold' }}>Registrati qui</Link>  {/*Link di React Router che porta all'endpoint di registrazion*/}
                         </Typography>
                     </Box>
                 </CardContent>

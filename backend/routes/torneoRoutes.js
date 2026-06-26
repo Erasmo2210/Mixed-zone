@@ -79,10 +79,44 @@ router.put('/:id/aggiorna-squadra/:squadraId', verificaToken, isGestore, async (
     }
 });
 
-//API recupero tornei visibili
+//API aggiornamento testo risultati e classifica generale del torneo
+router.put('/:id/risultati', verificaToken, isGestore, async (req, res) => {
+    try {
+        const { risultatiEClassifica } = req.body;
+        const torneo = await Torneo.findById(req.params.id);
+
+        if (!torneo) {
+            return res.status(404).json({ message: 'Torneo non trovato.' });
+        }
+
+        //Controllo proprietario del torneo
+        if (torneo.organizzatore.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Non sei l\'organizzatore di questo torneo.' });
+        }
+
+        torneo.risultatiEClassifica = risultatiEClassifica;
+        await torneo.save();
+        res.json({ message: 'Risultati generali aggiornati con successo', torneo });
+    } catch (error) {
+        res.status(500).json({ message: 'Errore nell\'aggiornamento dei risultati.', error: error.message });
+    }
+});
+
+//API recupero tornei
 router.get('/', verificaToken, async (req, res) => {
     try {
-        const tornei = await Torneo.find({ isVisibile: true }).populate('organizzatore', 'name');
+        let query = { isVisibile: true };
+        
+        // Se l'utente è un Gestore, mostriamo anche i suoi tornei oscurati
+        if (req.user.role === 'Gestore') {
+            query = { $or: [{ isVisibile: true }, { organizzatore: req.user._id }] };
+        } else if (req.user.role === 'Admin') {
+            query = {}; // L'admin vede tutti i tornei
+        }
+
+        const tornei = await Torneo.find(query)
+            .populate('organizzatore', 'name')
+            .populate('squadreIscritte.capitano', 'name email');
         res.json(tornei);
     } catch (error) {
         res.status(500).json({ message: 'Errore nel recupero dei tornei.', error: error.message });

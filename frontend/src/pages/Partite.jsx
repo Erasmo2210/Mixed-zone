@@ -2,29 +2,44 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { apiFetch } from '../services/api';
 import { socket } from '../services/socket';
-import { Container, Typography, Grid, Card, CardContent, CardActions, Button, Chip, Box, CircularProgress, Alert, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { Container, Typography, Grid, Card, CardContent, CardActions, Button, Chip, Box, CircularProgress, Alert, List, ListItem, ListItemText, Divider, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem } from '@mui/material';
 
 export default function Partite() {
     const { user } = useContext(AuthContext);
 
     //inizializzazione degli stati dei campi
     const [partite, setPartite] = useState([]);
+    const [prenotazioniAccettate, setPrenotazioniAccettate] = useState([]);
     const [loading, setLoading] = useState(true);
     const [errore, setErrore] = useState('');
+    const [modalAperto, setModalAperto] = useState(false);
+    const [prenotazioneSelezionata, setPrenotazioneSelezionata] = useState('');
+    const [giocatoriMancanti, setGiocatoriMancanti] = useState(1);
+    const [creazioneInCorso, setCreazioneInCorso] = useState(false);
+    const [successoCreazione, setSuccessoCreazione] = useState('');
+
+    const recuperaDati = async () => {
+        try {
+            const datiPartite = await apiFetch('/partite');
+            setPartite(datiPartite);
+
+            if (user?.role === 'Cliente') {
+                const datiPrenotazioni = await apiFetch('/prenotazioni/mie');
+                const prenotazioniConfermate = (datiPrenotazioni || []).filter((p) => p.stato === 'Confermata' || p.stato === 'In attesa di conferma dal gestore');
+                setPrenotazioniAccettate(prenotazioniConfermate);
+            } else {
+                setPrenotazioniAccettate([]);
+            }
+        } catch (err) {
+            setErrore('Impossibile caricare le partite aperte.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     //useEffect esegue il codice che contiene automaticamente quando si verifica una condizione, qui all'avvio 
     useEffect(() => {
-        const recuperaPartite = async () => {
-            try {
-                const dati = await apiFetch('/partite');
-                setPartite(dati);
-            } catch (err) {
-                setErrore('Impossibile caricare le partite aperte.');
-            } finally {            //finally nelle promise fa eseguire sempre e comunque l'azione che contiene
-                setLoading(false);
-            }
-        };
-        recuperaPartite();
+        recuperaDati();
 
         //Attivo la connessione webSocket
         socket.connect();
@@ -54,8 +69,21 @@ export default function Partite() {
             socket.off('lobbyAggiornata'); //socket.off è il metodo per smettere di ascoltare un evento specifico, qui "partitaAggiornata"
             socket.disconnect();
         };
-    }, []); //array vuoto per eseguire solo una vola all'avvio lo useEffect
+    }, [user?.role]); //rilegge i dati se cambia il ruolo o lo stato di autenticazione
 
+    const apriModalCreazione = () => {
+        setSuccessoCreazione('');
+        setErrore('');
+        setPrenotazioneSelezionata(prenotazioniAccettate[0]?._id || '');
+        setGiocatoriMancanti(1);
+        setModalAperto(true);
+    };
+
+    const chiudiModalCreazione = () => {
+        setModalAperto(false);
+        setPrenotazioneSelezionata('');
+        setGiocatoriMancanti(1);
+    };
 
     //Funzione per unirsi a una partita
     const gestisciPartecipazione = async (partitaId) => {
@@ -67,6 +95,40 @@ export default function Partite() {
             });                  //ci pensa il socket ad aggiornare
         } catch (err) {
             setErrore(err.message);
+        }
+    };
+
+    const gestisciCreazionePartita = async (event) => {
+        event.preventDefault();
+        setErrore('');
+        setSuccessoCreazione('');
+        setCreazioneInCorso(true);
+
+        try {
+            const prenotazioneSelezionataDettagli = prenotazioniAccettate.find((p) => p._id === prenotazioneSelezionata);
+
+            if (!prenotazioneSelezionataDettagli || !prenotazioneSelezionataDettagli.campo?._id) {
+                throw new Error('Seleziona una prenotazione confermata valida.');
+            }
+
+            await apiFetch('/partite', {
+                method: 'POST',
+                body: JSON.stringify({
+                    campoId: prenotazioneSelezionataDettagli.campo._id,
+                    data: prenotazioneSelezionataDettagli.data,
+                    ora: prenotazioneSelezionataDettagli.oraInizio,
+                    maxGiocatori: giocatoriMancanti,
+                    prenotazioneId: prenotazioneSelezionataDettagli._id
+                })
+            });
+
+            setSuccessoCreazione('Partita creata correttamente.');
+            chiudiModalCreazione();
+            await recuperaDati();
+        } catch (err) {
+            setErrore(err.message || 'Impossibile creare la partita.');
+        } finally {
+            setCreazioneInCorso(false);
         }
     };
 
@@ -88,31 +150,40 @@ export default function Partite() {
             </Typography>
 
             {errore && <Alert severity="error" sx={{ mb: 3 }}>{errore}</Alert>}
+            {successoCreazione && <Alert severity="success" sx={{ mb: 3 }}>{successoCreazione}</Alert>}
+
+            {user?.role === 'Cliente' && (
+                <Alert severity="info" sx={{ mb: 3 }}>
+                    Le prenotazioni in attesa di giocatori compaiono automaticamente in questa sezione. Non serve aprirle manualmente con il pulsante precedente.
+                </Alert>
+            )}
 
             <Grid container spacing={3}>
                 {partite.length === 0 ? (
                     <Grid item xs={12}>
-                        <Alert severity="info">Al momento non ci sono partite aperte che buscan giocatori. Crea una prenotazione per aprirne una!</Alert>
+                        <Alert severity="info">Al momento non ci sono partite aperte che cercano giocatori. Crea una prenotazione per aprirne una!</Alert>
                     </Grid>
                 ) : (
                     partite.map((partita) => {
 
                         //calcolo dei posti disponibili e controllo se l'utente è già iscritto alla partita
-                        const postiMax = partita.giocatoriRichiesti || 1;
+                        const giocatoriRichiesti = partita.giocatoriRichiesti || 1;
                         const isGiaPartecipante = partita.giocatoriIscritti?.some((g) => (g._id || g) === user?._id);
-                        const postiDisponibili = postiMax - (partita.giocatoriIscritti?.length || 0);
+                        const partecipantiAttuali = partita.giocatoriIscritti?.length || 0;
+                        const postiMancanti = Math.max(0, giocatoriRichiesti - Math.max(0, partecipantiAttuali - 1));
+                        const obiettivoTotale = giocatoriRichiesti + 1;
 
                         return (
                             <Grid item key={partita._id} xs={12} md={6}>
-                                <Card elevation={3} sx={{ borderLeft: '5px solid #2e7d32' }}>
+                                <Card elevation={3} sx={{ borderLeft: (theme) => `5px solid ${theme.palette.primary.main}` }}>
                                     <CardContent>
                                         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                                             <Typography variant="h6" fontWeight="bold">
                                                 {partita.campo?.nome || 'Campo Mixed-Zone'}
                                             </Typography>
                                             <Chip
-                                                label={postiDisponibili <= 0 ? "Completa" : `${postiDisponibili} Posti Liberi`}
-                                                color={postiDisponibili <= 0 ? "error" : "success"}
+                                                label={postiMancanti <= 0 ? "Completa" : `${postiMancanti} Posti Mancanti`}
+                                                color={postiMancanti <= 0 ? "error" : "success"}
                                                 variant="filled"
                                             />
                                         </Box>
@@ -125,7 +196,7 @@ export default function Partite() {
 
                                         <Typography variant="subtitle2" color="secondary.main" fontWeight="bold" gutterBottom>
                                             {/* Mostra il conteggio basato sulle variabili del database */}
-                                            Formazione Attuale ({(partita.giocatoriIscritti?.length || 0)}/{postiMax}):
+                                            Formazione Attuale ({(partita.giocatoriIscritti?.length || 0)}/{obiettivoTotale}):
                                         </Typography>
 
                                         {/* Elenco in tempo reale dei partecipanti */}
@@ -139,7 +210,7 @@ export default function Partite() {
                                         </List>
                                     </CardContent>
 
-                                    <CardActions sx={{ p: 2, bgcolor: '#fcfcfc', borderTop: '1px solid #eee' }}>
+                                    <CardActions sx={{ p: 2, bgcolor: 'background.default', borderTop: '1px solid', borderColor: 'divider' }}>
                                         {/* gestione del bottoni in base al ruolo */}
                                         {!user ? (
                                             <Button fullWidth variant="outlined" disabled>Accedi per giocare</Button>
@@ -147,7 +218,7 @@ export default function Partite() {
                                             <Button fullWidth variant="outlined" disabled>Inibito ai Gestori/Admin</Button>
                                         ) : isGiaPartecipante ? (
                                             <Button fullWidth variant="contained" color="secondary" disabled>Sei già in formazione</Button>
-                                        ) : postiDisponibili <= 0 || partita.statoPartita === 'Al completo' ? (
+                                        ) : postiMancanti <= 0 || partita.statoPartita === 'Al completo' ? (
                                             <Button fullWidth variant="contained" disabled>Squadre Al Completo</Button>
                                         ) : (
                                             <Button
@@ -166,6 +237,56 @@ export default function Partite() {
                     })
                 )}
             </Grid>
+
+            <Dialog open={modalAperto} onClose={chiudiModalCreazione} fullWidth maxWidth="sm">
+                <DialogTitle fontWeight="bold" color="secondary.main">
+                    Crea una partita da prenotazione confermata
+                </DialogTitle>
+                <Box component="form" onSubmit={gestisciCreazionePartita} noValidate>
+                    <DialogContent dividers>
+                        <TextField
+                            select
+                            fullWidth
+                            label="Prenotazione confermata"
+                            value={prenotazioneSelezionata}
+                            onChange={(event) => setPrenotazioneSelezionata(event.target.value)}
+                            margin="normal"
+                            required
+                        >
+                            {prenotazioniAccettate.map((prenotazione) => (
+                                <MenuItem key={prenotazione._id} value={prenotazione._id}>
+                                    {prenotazione.campo?.nome || 'Campo'} · {new Date(prenotazione.data).toLocaleDateString('it-IT')} · {prenotazione.oraInizio}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        <TextField
+                            select
+                            fullWidth
+                            label="Giocatori mancanti"
+                            value={giocatoriMancanti}
+                            onChange={(event) => setGiocatoriMancanti(Number(event.target.value))}
+                            margin="normal"
+                        >
+                            {(() => {
+                                const capienzaSelezionata = prenotazioniAccettate.find((p) => p._id === prenotazioneSelezionata)?.campo?.capienza;
+                                const capienzaMassima = capienzaSelezionata === '7vs7' ? 13 : capienzaSelezionata === '11vs11' ? 21 : 9;
+                                return Array.from({ length: capienzaMassima }, (_, index) => (
+                                    <MenuItem key={index + 1} value={index + 1}>
+                                        {index + 1} giocatore{index + 1 > 1 ? '/i' : ' '} mancanti
+                                    </MenuItem>
+                                ));
+                            })()}
+                        </TextField>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button onClick={chiudiModalCreazione} color="inherit">Annulla</Button>
+                        <Button type="submit" variant="contained" color="primary" disabled={creazioneInCorso}>
+                            {creazioneInCorso ? 'Creazione...' : 'Crea partita'}
+                        </Button>
+                    </DialogActions>
+                </Box>
+            </Dialog>
         </Container>
     );
 }
