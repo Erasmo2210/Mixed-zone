@@ -118,13 +118,15 @@ const NavigationBar = () => {
                     {user && user.role === 'Cliente' ? (
                         <Button component={Link} to="/prenotazioni" color="inherit">Prenotazioni</Button>
                     ) : null}
-                    <Button component={Link} to="/tornei" color="inherit">Tornei</Button>
+                    {user?.role !== 'Admin' && (
+                        <Button component={Link} to="/tornei" color="inherit">Tornei</Button>
+                    )}
 
                     {/* Cambio l'interfaccia in base allo stato utente */}
 
                     {user && (user.role === 'Gestore' || user.role === 'Admin') ? (   //&& serve per controllare se user esiste
                         <Button component={Link} to="/dashboard" variant="contained" color="primary">
-                            Pannello Gestione
+                            Dashboard
                         </Button>
                     ) : null}
 

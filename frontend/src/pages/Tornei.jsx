@@ -194,10 +194,10 @@ export default function Tornei() {
         <Container sx={{ mt: 4, mb: 4 }}>
             <Box mb={4}>
                 <Typography variant="h4" fontWeight="bold" color="secondary.main">
-                    Tornei & Campionati 🏆
+                    Tornei🏆
                 </Typography>
                 <Typography variant="subtitle1" color="text.secondary">
-                    Visualizza le classifiche o iscrivi la tua squadra per partecipare ai nostri tornei ufficiali.
+                    Iscriviti ai nostri tornei ufficiali!
                 </Typography>
             </Box>
 
@@ -279,7 +279,7 @@ export default function Tornei() {
                                                 </Box>
 
                                                 <Typography variant="body2" sx={{ mb: 2, fontStyle: 'italic', bgcolor: '#e0f2fe', p: 1.5, borderRadius: 1 }}>
-                                                    <strong>📢 Comunicazione ed Eventi:</strong> {torneo.risultatiEClassifica}
+                                                    <strong>📢 Comunicazioni:</strong> {torneo.risultatiEClassifica}
                                                 </Typography>
 
                                                 <Typography variant="h6" fontWeight="medium" gutterBottom color="text.primary">

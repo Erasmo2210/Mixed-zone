@@ -21,7 +21,8 @@ export default function Dashboard() {
     const [indirizzoModifica, setIndirizzoModifica] = useState('');
     const [tipologiaModifica, setTipologiaModifica] = useState('5vs5');
     const [prezzoModifica, setPrezzoModifica] = useState('');
-
+    const [utenti, setUtenti] = useState([]);
+    const [tornei, setTornei] = useState([]);
 
     const caricaDatiDashboard = async () => {
         try {
@@ -31,6 +32,14 @@ export default function Dashboard() {
             if (user?.role === 'Gestore') {
                 const prenotazioniRicevute = await apiFetch('/prenotazioni/gestore');
                 setPrenotazioni(prenotazioniRicevute);
+            }
+
+            if (user?.role === 'Admin') {
+                const utentiRegistrati = await apiFetch('/admin/utenti');
+                setUtenti(utentiRegistrati);
+
+                const torneiRegistrati = await apiFetch('/tornei');
+                setTornei(torneiRegistrati);
             }
         } catch (err) {
             setErrore('Impossibile caricare i dati gestionali.');
@@ -135,6 +144,42 @@ export default function Dashboard() {
         }
     };
 
+    const GestisciUtente = async (utenteId, isActive) => {
+        try {
+            setErrore('');
+            setSuccesso('');
+
+            await apiFetch(`/admin/utenti/${utenteId}/stato`, {
+                method: 'PUT',
+                body: JSON.stringify({ isActive })
+            });
+
+            setSuccesso(isActive ? 'Utente riattivato con successo.' : 'Utente disattivato con successo.');
+            caricaDatiDashboard();
+        } catch (err) {
+            setErrore(err.message || 'Errore durante la moderazione dell\'utente.');
+        }
+    };
+
+    const GestisciTorneo = async (torneoId, isVisible) => {
+        try {
+            setErrore('');
+            setSuccesso('');
+
+            await apiFetch(`/admin/tornei/${torneoId}/oscura`, {
+                method: 'PUT',
+                body: JSON.stringify({ isVisibile: isVisible })
+            });
+
+            setSuccesso(isVisible ? 'Torneo riattivato con successo.' : 'Torneo oscurato con successo.');
+            caricaDatiDashboard();
+        } catch (err) {
+            setErrore(err.message || 'Errore durante la moderazione del torneo.');
+        }
+    };
+
+    const mostraColonnaModifica = user?.role === 'Gestore';
+
     //Visualizza o oscura campo
     const CambioVisibilita = async (campoId, statoAttuale) => {
         try {
@@ -166,7 +211,7 @@ export default function Dashboard() {
         <Container sx={{ mt: 4, mb: 4 }}>
             <Box mb={4}>
                 <Typography variant="h4" fontWeight="bold" color="secondary.main">
-                    Pannello di Controllo 🎛️
+                    Pannello di Controllo 
                 </Typography>
                 <Typography variant="subtitle1" color="text.secondary">
                     Benvenuto nella console di Mixed-Zone. Ruolo: <strong>{user?.role}</strong>
@@ -219,7 +264,7 @@ export default function Dashboard() {
                 {/* Tabella di controllo */}
                 <Grid item xs={12} md={user?.role === 'Gestore' ? 8 : 12}>
                     <Typography variant="h6" fontWeight="bold" gutterBottom color="secondary.main">
-                        {user?.role === 'Gestore' ? 'I Tuoi Impianti Sportivi' : 'Moderazione Campi Piattaforma (UML Action)'}
+                        {user?.role === 'Gestore' ? 'I tuoi impianti' : 'Campi registrati'}
                     </Typography>
                     <TableContainer component={Paper} elevation={3}>
                         <Table aria-label="tabella gestionale">
@@ -230,7 +275,9 @@ export default function Dashboard() {
                                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Prezzo orario</TableCell>
                                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Indirizzo</TableCell>
                                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Stato</TableCell>
-                                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Modifica</TableCell>
+                                    {mostraColonnaModifica && (
+                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Modifica</TableCell>
+                                    )}
                                     <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold' }}>Azioni</TableCell>
                                 </TableRow>
                             </TableHead>
@@ -253,8 +300,8 @@ export default function Dashboard() {
                                                     <Box component="span" sx={{ color: 'error.main', fontWeight: 'bold' }}>Oscurato</Box>
                                                 )}
                                             </TableCell>
-                                            <TableCell>
-                                                {user?.role === 'Gestore' && (
+                                            {mostraColonnaModifica && (
+                                                <TableCell>
                                                     <Button
                                                         variant="outlined"
                                                         color="primary"
@@ -263,8 +310,8 @@ export default function Dashboard() {
                                                     >
                                                         Modifica
                                                     </Button>
-                                                )}
-                                            </TableCell>
+                                                </TableCell>
+                                            )}
                                             <TableCell align="right">
                                                 {user?.role === 'Admin' ? (
                                                     <Button
@@ -273,7 +320,7 @@ export default function Dashboard() {
                                                         size="small"
                                                         onClick={() => CambioVisibilita(campo._id, campo.isVisibile !== false)}
                                                     >
-                                                        {campo.isVisibile !== false ? "Modera / Oscura" : "Riattiva"}
+                                                        {campo.isVisibile !== false ? "Oscura" : "Riattiva"}
                                                     </Button>
                                                 ) : (
                                                     <Button
@@ -293,6 +340,116 @@ export default function Dashboard() {
                         </Table>
                     </TableContainer>
                 </Grid>
+
+                {user?.role === 'Admin' && (
+                    <Grid item xs={12}>
+                        <Typography variant="h6" fontWeight="bold" gutterBottom color="secondary.main">
+                            Gestione utenti
+                        </Typography>
+                        <TableContainer component={Paper} elevation={3} sx={{ mb: 4 }}>
+                            <Table aria-label="tabella utenti admin">
+                                <TableHead sx={{ bgcolor: 'secondary.main' }}>
+                                    <TableRow>
+                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nome</TableCell>
+                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Email</TableCell>
+                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Ruolo</TableCell>
+                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Stato</TableCell>
+                                        <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold' }}>Azioni</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {utenti.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} align="center">Nessun utente registrato</TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        utenti.map((utenteRow) => (
+                                            <TableRow key={utenteRow._id}>
+                                                <TableCell>{utenteRow.name}</TableCell>
+                                                <TableCell>{utenteRow.email}</TableCell>
+                                                <TableCell>{utenteRow.role}</TableCell>
+                                                <TableCell>
+                                                    {utenteRow.isActive ? (
+                                                        <Box component="span" sx={{ color: 'success.main', fontWeight: 'bold' }}>Attivo</Box>
+                                                    ) : (
+                                                        <Box component="span" sx={{ color: 'error.main', fontWeight: 'bold' }}>Disattivato</Box>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    {utenteRow._id === user?._id ? (
+                                                        <Button size="small" variant="outlined" disabled>
+                                                            Il tuo account
+                                                        </Button>
+                                                    ) : (
+                                                        <Button
+                                                            size="small"
+                                                            variant="contained"
+                                                            color={utenteRow.isActive ? 'error' : 'success'}
+                                                            onClick={() => GestisciUtente(utenteRow._id, !utenteRow.isActive)}
+                                                        >
+                                                            {utenteRow.isActive ? 'Disattiva' : 'Riattiva'}
+                                                        </Button>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Grid>
+                )}
+
+                {user?.role === 'Admin' && (
+                    <Grid item xs={12}>
+                        <Typography variant="h6" fontWeight="bold" gutterBottom color="secondary.main">
+                            Gestione tornei
+                        </Typography>
+                        <TableContainer component={Paper} elevation={3} sx={{ mb: 4 }}>
+                            <Table aria-label="tabella tornei admin">
+                                <TableHead sx={{ bgcolor: 'secondary.main' }}>
+                                    <TableRow>
+                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nome torneo</TableCell>
+                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Organizzatore</TableCell>
+                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Stato</TableCell>
+                                        <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold' }}>Azioni</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {tornei.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={4} align="center">Nessun torneo registrato</TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        tornei.map((torneo) => (
+                                            <TableRow key={torneo._id}>
+                                                <TableCell>{torneo.nome}</TableCell>
+                                                <TableCell>{torneo.organizzatore?.name || 'N/D'}</TableCell>
+                                                <TableCell>
+                                                    {torneo.isVisibile ? (
+                                                        <Box component="span" sx={{ color: 'success.main', fontWeight: 'bold' }}>Attivo</Box>
+                                                    ) : (
+                                                        <Box component="span" sx={{ color: 'error.main', fontWeight: 'bold' }}>Oscurato</Box>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <Button
+                                                        size="small"
+                                                        variant="contained"
+                                                        color={torneo.isVisibile ? 'error' : 'success'}
+                                                        onClick={() => GestisciTorneo(torneo._id, !torneo.isVisibile)}
+                                                    >
+                                                        {torneo.isVisibile ? 'Oscura' : 'Riattiva'}
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Grid>
+                )}
 
                 {user?.role === 'Gestore' && (
                     <Grid item xs={12}>

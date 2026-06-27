@@ -7,6 +7,15 @@ const Torneo = require('../models/Torneo');
 const { verificaToken, isAdmin } = require('../middleware/auth');
 
 //API moderazione utenti
+router.get('/utenti', verificaToken, isAdmin, async (req, res) => {
+    try {
+        const utenti = await User.find({}, 'name email role isActive createdAt updatedAt');
+        res.json(utenti);
+    } catch (error) {
+        res.status(500).json({ message: 'Errore nel recupero degli utenti.', error: error.message });
+    }
+});
+
 router.put('/utenti/:id/stato', verificaToken, isAdmin, async (req, res) => {
     try {
         const { isActive } = req.body;
