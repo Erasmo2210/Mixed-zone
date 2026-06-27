@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { apiFetch } from '../services/api';
-import { Container, Grid, Card, CardContent, CardActions, CardMedia, Typography, Button, CircularProgress, Alert, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Box } from '@mui/material';
+import { Container, Grid, Card, CardContent, CardActions, Typography, Button, CircularProgress, Alert, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Box } from '@mui/material';
 
 export default function Campi() {
     const { user } = useContext(AuthContext); //utilizza user da AuthContext
@@ -164,6 +164,9 @@ export default function Campi() {
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
                                     Prezzo orario: €{campo.prezzoAllOra}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                    Indirizzo: {campo.posizione || campo.indirizzo || 'N/D'}
                                 </Typography>
                             </CardContent>
                             <CardActions sx={{ p: 2, pt: 0 }}>

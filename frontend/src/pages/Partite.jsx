@@ -143,10 +143,10 @@ export default function Partite() {
     return (
         <Container sx={{ mt: 4, mb: 4 }}>
             <Typography variant="h4" color="secondary.main" gutterBottom fontWeight="bold">
-                Matchmaking & Partite Aperte ⚽
+                Matchmaking ⚽
             </Typography>
             <Typography variant="body1" sx={{ mb: 4, color: 'text.secondary' }}>
-                Unisciti alle partite organizzate dalla community in tempo reale. Completa le squadre e scendi in campo.
+                Unisciti alle partite organizzate dalla community in tempo reale.
             </Typography>
 
             {errore && <Alert severity="error" sx={{ mb: 3 }}>{errore}</Alert>}
@@ -154,7 +154,7 @@ export default function Partite() {
 
             {user?.role === 'Cliente' && (
                 <Alert severity="info" sx={{ mb: 3 }}>
-                    Le prenotazioni in attesa di giocatori compaiono automaticamente in questa sezione. Non serve aprirle manualmente con il pulsante precedente.
+                    Le prenotazioni in attesa di giocatori compaiono automaticamente in questa sezione.
                 </Alert>
             )}
 
@@ -189,7 +189,7 @@ export default function Partite() {
                                         </Box>
 
                                         <Typography variant="body2" color="text.secondary" gutterBottom>
-                                            <strong>Data:</strong> {new Date(partita.data).toLocaleDateString('it-IT')} | <strong>Ora:</strong> {partita.ora}
+                                            <strong>Data:</strong> {new Date(partita.data).toLocaleDateString('it-IT')} | <strong>Ore:</strong> {partita.ora}
                                         </Typography>
 
                                         <Divider sx={{ my: 1.5 }} />
@@ -214,7 +214,7 @@ export default function Partite() {
                                         {/* gestione del bottoni in base al ruolo */}
                                         {!user ? (
                                             <Button fullWidth variant="outlined" disabled>Accedi per giocare</Button>
-                                        ) : user.role !== 'Cliente' && user.ruolo !== 'Cliente' ? ( // Controllo bilingue per sicurezza
+                                        ) : user.role !== 'Cliente' ? (
                                             <Button fullWidth variant="outlined" disabled>Inibito ai Gestori/Admin</Button>
                                         ) : isGiaPartecipante ? (
                                             <Button fullWidth variant="contained" color="secondary" disabled>Sei già in formazione</Button>

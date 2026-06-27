@@ -38,7 +38,18 @@ router.put('/utenti/:id/stato', verificaToken, isAdmin, async (req, res) => {
         await utente.save();
 
         const azione = isActive ? 'attivato' : 'disattivato';
-        res.json({ message: `Account utente ${azione} con successo.`, utente });
+        res.json({
+            message: `Account utente ${azione} con successo.`,
+            utente: {
+                id: utente._id,
+                name: utente.name,
+                email: utente.email,
+                role: utente.role,
+                isActive: utente.isActive,
+                createdAt: utente.createdAt,
+                updatedAt: utente.updatedAt
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: 'Errore durante la moderazione utente.', error: error.message });
     }
