@@ -1,9 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Mixed-Zone API Documentation",
+    "title": "Mixed-Zone API documentazione",
     "version": "1.0.0",
-    "description": "Documentazione ufficiale automatica delle API REST per la piattaforma Mixed-Zone",
+    "description": "Documentazione automatica delle API per la piattaforma Mixed-Zone",
     "contact": {
       "name": "Gruppo Erasmo e Davide"
     }
@@ -18,7 +18,7 @@
       "type": "apiKey",
       "in": "header",
       "name": "Authorization",
-      "description": "Inserisci il token JWT nel formato: Bearer <tuo_token>"
+      "description": "Inserire il token JWT nel formato: Bearer <tuo_token>"
     }
   },
   "paths": {
@@ -30,21 +30,7 @@
             "name": "body",
             "in": "body",
             "schema": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "example": "any"
-                },
-                "email": {
-                  "example": "any"
-                },
-                "password": {
-                  "example": "any"
-                },
-                "role": {
-                  "example": "any"
-                }
-              }
+              "$ref": "#/definitions/Utente"
             }
           }
         ],
@@ -110,21 +96,7 @@
             "name": "body",
             "in": "body",
             "schema": {
-              "type": "object",
-              "properties": {
-                "nome": {
-                  "example": "any"
-                },
-                "posizione": {
-                  "example": "any"
-                },
-                "prezzoAllOra": {
-                  "example": "any"
-                },
-                "capienza": {
-                  "example": "any"
-                }
-              }
+              "$ref": "#/definitions/Campo"
             }
           }
         ],
@@ -962,6 +934,180 @@
           "500": {
             "description": "Internal Server Error"
           }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "User": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "Cliente"
+        },
+        "email": {
+          "type": "string",
+          "example": "cliente@test.com"
+        },
+        "role": {
+          "type": "string",
+          "example": "Cliente"
+        },
+        "creazione": {
+          "type": "string",
+          "example": "2026-06-28T12:00:00.000Z"
+        }
+      }
+    },
+    "Campo": {
+      "type": "object",
+      "properties": {
+        "nome": {
+          "type": "string",
+          "example": "Campo centrale"
+        },
+        "tipologia": {
+          "type": "string",
+          "example": "5vs5"
+        },
+        "prezzoAllOra": {
+          "type": "number",
+          "example": 5
+        },
+        "isVisibile": {
+          "type": "boolean",
+          "example": true
+        },
+        "oscuratoDaAdmin": {
+          "type": "boolean",
+          "example": false
+        }
+      }
+    },
+    "Prenotazione": {
+      "type": "object",
+      "properties": {
+        "campoId": {
+          "type": "string",
+          "example": "CampoId"
+        },
+        "utenteId": {
+          "type": "string",
+          "example": "UtenteId"
+        },
+        "data": {
+          "type": "string",
+          "example": "2026-06-29"
+        },
+        "slotOrario": {
+          "type": "string",
+          "example": "18:30 - 20:00"
+        }
+      }
+    },
+    "Partita": {
+      "type": "object",
+      "properties": {
+        "CampoId": {
+          "type": "string",
+          "example": "CampoId"
+        },
+        "data": {
+          "type": "string",
+          "example": "2026-06-29"
+        },
+        "ora": {
+          "type": "string",
+          "example": "18:30 - 20-30"
+        },
+        "organizzatore": {
+          "type": "string",
+          "example": "UtenteId"
+        },
+        "Prenotazione": {
+          "type": "string",
+          "example": "PrenotazioneId"
+        },
+        "GiocatorIscritti": {
+          "type": "array",
+          "example": [
+            "UtenteID"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "GiocatoriRichiesti": {
+          "type": "number",
+          "example": 1
+        },
+        "StatoPartita": {
+          "type": "string",
+          "example": "In attesa"
+        }
+      }
+    },
+    "SquadraIscritta": {
+      "type": "object",
+      "properties": {
+        "NomeSquadra": {
+          "type": "string",
+          "example": "Squadra"
+        },
+        "Capitano": {
+          "type": "string",
+          "example": "UtenteId"
+        },
+        "Punti": {
+          "type": "number",
+          "example": 5
+        },
+        "PartiteGiocate": {
+          "type": "number",
+          "example": 3
+        },
+        "Vittorie": {
+          "type": "number",
+          "example": 3
+        },
+        "Pareggi": {
+          "type": "number",
+          "example": 0
+        },
+        "Sconfitte": {
+          "type": "number",
+          "example": 1
+        }
+      }
+    },
+    "Torneo": {
+      "type": "object",
+      "properties": {
+        "Nome": {
+          "type": "string",
+          "example": "Torneo"
+        },
+        "Organizzatore": {
+          "type": "string",
+          "example": "UtenteId"
+        },
+        "SquadreIscritte": {
+          "type": "array",
+          "example": [
+            "Squadra"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "RisultatiEClassifica": {
+          "type": "string",
+          "example": "Iniziato"
+        },
+        "isVisibile": {
+          "type": "boolean",
+          "example": true
         }
       }
     }
