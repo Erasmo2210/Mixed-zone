@@ -12,9 +12,6 @@ const prenotazioneRoutes = require('./routes/prenotazioneRoutes');
 const torneoRoutes = require('./routes/torneoRoutes');
 const partitaRoutes = require('./routes/partitaRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-//import di swagger
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsDoc = require('swagger-jsdoc');
 
 //Inizializzazioni
 const app = express();
@@ -54,35 +51,11 @@ io.on('connection', (socket) => {  //quando un client si connette, si apre l'eve
 });
 
 //inizializzazione di Swagger per la documentazione delle API 
-const swaggerOptions = {
-    swaggerDefinition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'Mixed-Zone API Documentation',
-            version: '1.0.0',
-            description: 'Documentazione ufficiale delle API REST per la piattaforma di gestione campi e matchmaking Mixed-Zone',
-            contact: { name: 'Gruppo Erasmo e Davide' }
-        },
-        servers: [
-            { url: 'http://localhost:5000', description: 'Server di Sviluppo Locale' }
-        ],
-        components: {
-            securitySchemes: {
-                bearerAuth: { 
-                    type: 'http',
-                    scheme: 'bearer',
-                    bearerFormat: 'JWT'
-                }
-            }
-        }
-    },
-    //Swagger legge le API all'interno di routes
-    apis: ['./routes/*.js'] 
-};
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger-output.json'); 
+//Rotta per la documentazione grafica
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-//Swagger è visualizzabile alla rotta /api-docs
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 //Connessione a MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
