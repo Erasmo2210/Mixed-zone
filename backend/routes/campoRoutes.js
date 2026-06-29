@@ -53,7 +53,7 @@ router.put('/:id', verificaToken, isGestore, async (req, res) => {
         const { nome, posizione, prezzoAllOra, isVisibile, capienza } = req.body;
 
         //Ricerco il campo
-        const campo = await Campo.findById(req.params.id); //recupero i dati o dall' id passato come parametro
+        const campo = await Campo.findById(req.params.id); //recupero i dati del campo tramite suo id
         if (!campo) {
             return res.status(404).json({ message: 'Campo da calcio non trovato.' });
         }

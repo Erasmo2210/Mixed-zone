@@ -5,6 +5,8 @@ import { Box, CircularProgress } from '@mui/material';
 
 //children è ciò che mostro se l'utente è autorizzato, allowedRoles è un array dei ruoli ammessi 
 export default function ProtectedRoute({ children, allowedRoles }) {  
+
+    //useContext gestisce lo stato globale per portare dati tra tutti i componenti
     const { user, loading } = useContext(AuthContext); //recupero i dati dell'user loggato e il valore di loading (perchè se il loading è true sta ancora controllando i cookie)
 
     if (loading) {

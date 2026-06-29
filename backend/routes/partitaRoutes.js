@@ -16,6 +16,7 @@ router.post('/', verificaToken, isCliente, async (req, res) => {
             return res.status(404).json({ message: 'Campo non disponibile o inesistente.' });
         }
 
+        //per aprire una partita deve esistere prima la sua prenotazione
         let prenotazioneAssociata = null;
         if (prenotazioneId) {
             prenotazioneAssociata = await Prenotazione.findById(prenotazioneId);
@@ -71,7 +72,7 @@ router.post('/:id/unisciti', verificaToken, isCliente, async (req, res) => {
             return res.status(400).json({ message: 'Impossibile unirsi, la partita è chiusa o completata.' });
         }
 
-        //Controllo se il cliente è già iscritto a questa partita
+        //Controllo se il cliente è già iscritto a questa partita, some cerca una corrispondenza nell'array
         if (partita.giocatoriIscritti.some(id => id.toString() === req.user._id.toString())) { //converto l'id in stringa per fre il confronto
             return res.status(400).json({ message: 'Ti sei già iscritto a questa partita.' });
         }
@@ -79,10 +80,12 @@ router.post('/:id/unisciti', verificaToken, isCliente, async (req, res) => {
         //Aggiungo il cliente all'array dei partecipanti
         partita.giocatoriIscritti.push(req.user._id);
 
+        //controllo numero giocatori mancanti
         const giocatoriExtra = partita.giocatoriIscritti.length - 1;
         if (giocatoriExtra >= partita.giocatoriRichiesti) {
             partita.statoPartita = 'Al completo';
 
+            //cambio lo stato al gestore quando la partita è completa
             if (partita.prenotazione) {
                 const prenotazioneCollegata = await Prenotazione.findById(partita.prenotazione);
                 if (prenotazioneCollegata && prenotazioneCollegata.stato === 'In attesa di giocatori') {

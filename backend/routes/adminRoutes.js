@@ -88,6 +88,7 @@ router.put('/campi/:id/oscura', verificaToken, async (req, res) => {
 
         campo.isVisibile = isVisibile;
 
+        //teniamo traccia se il campo è stato oscurato dall'admin
         if (utenteLoggato.role === 'Admin') {
             if (oscuratoDaAdmin !== undefined) {
                 campo.oscuratoDaAdmin = oscuratoDaAdmin;
@@ -98,6 +99,7 @@ router.put('/campi/:id/oscura', verificaToken, async (req, res) => {
 
         await campo.save();
 
+        //risposta dinamica in base all'esito
         const stato = isVisibile ? 'reso visibile' : 'oscurato';
         res.json({ message: `Il campo è stato ${stato} dall'amministratore.`, campo });
     } catch (error) {

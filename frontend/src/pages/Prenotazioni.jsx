@@ -1,23 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../services/api';
-import {
-    Container,
-    Typography,
-    CircularProgress,
-    Alert,
-    Box,
-    Paper,
-    Stack,
-    Chip,
-} from '@mui/material';
+import {Container,Typography,CircularProgress,Alert,Box,Paper,Stack,Chip,} from '@mui/material';
 
 export default function Prenotazioni() {
+
+    //inizializzazione degli stati dei campi
     const [prenotazioni, setPrenotazioni] = useState([]);
     const [loading, setLoading] = useState(true);
     const [errore, setErrore] = useState('');
 
-    useEffect(() => {
-        const recuperaPrenotazioni = async () => {
+    //useEffect esegue il codice che contiene automaticamente quando si verifica una condizione, qui all'avvio
+    useEffect(() => {const recuperaPrenotazioni = async () => {
             try {
                 const dati = await apiFetch('/prenotazioni/mie');
                 setPrenotazioni(dati);
@@ -29,7 +22,7 @@ export default function Prenotazioni() {
         };
 
         recuperaPrenotazioni();
-    }, []);
+    }, []);  //array vuoto per eseguire solo una vola all'avvio lo useEffect
 
     const formatoData = (data) => new Date(data).toLocaleDateString('it-IT', {
         weekday: 'short',
@@ -38,11 +31,12 @@ export default function Prenotazioni() {
         year: 'numeric',
     });
 
+    //sfruttiamo materialUI che associa il colore automaticamente agli stati "success" ,"error", "info"
     const coloreStato = (stato) => {
         if (stato === 'Confermata') return 'success';
         if (stato === 'Rifiutata' || stato === 'Scaduta') return 'error';
         if (stato === 'In attesa di giocatori') return 'info';
-        return 'warning';
+        return 'warning'; 
     };
 
     if (loading) {

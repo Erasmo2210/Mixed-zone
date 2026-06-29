@@ -2,7 +2,7 @@
 const BASE_URL = 'http://localhost:5000/api';
 
 //Funzione per le fetch
-//endpoint indica che accetta in input un indirizzo specifico del backend, options indica che la funzione accetta parametri extra altrimenti {} oggetot vuoto
+//endpoint indica che accetta in input un indirizzo specifico del backend, options indica che la funzione accetta parametri extra altrimenti {} oggetto vuoto
 export const apiFetch = async (endpoint, options = {}) => { 
     
     const token = localStorage.getItem('token');
@@ -13,7 +13,7 @@ export const apiFetch = async (endpoint, options = {}) => {
         ...options.headers //spread operator per unire altri campi headers all' oggetto in maniera orizzontale
     };
 
-    //se c'è un token nel local storage, aggiungo all'ggetto headers il campo Authorization con il token in formato Bearer
+    //se c'è un token nel local storage, aggiungo all'oggetto headers il campo Authorization con il token in formato Bearer
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }

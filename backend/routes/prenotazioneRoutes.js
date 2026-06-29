@@ -6,7 +6,8 @@ const Partita = require('../models/Partita');
 //Importo auth.js
 const { verificaToken, isCliente, isGestore } = require('../middleware/auth');
 
-const parseOraPrenotazione = (oraInizio) => {
+//trasformo l'orario da stringhe a numeri
+const trasformaOraPrenotazione = (oraInizio) => {
     const [ore, minuti] = (oraInizio || '00:00').split(':').map(Number);
     return { ore, minuti };
 };
@@ -17,7 +18,7 @@ const aggiornaStatoScaduto = async (prenotazione) => {
     }
 
     const dataPrenotazione = new Date(prenotazione.data);
-    const { ore, minuti } = parseOraPrenotazione(prenotazione.oraInizio);
+    const { ore, minuti } = trasformaOraPrenotazione(prenotazione.oraInizio);
     dataPrenotazione.setHours(ore, minuti, 0, 0);
 
     if (dataPrenotazione < new Date()) {

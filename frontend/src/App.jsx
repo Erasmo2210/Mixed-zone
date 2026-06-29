@@ -12,13 +12,16 @@ import Tornei from './pages/Tornei';
 import Prenotazioni from './pages/Prenotazioni';
 
 const NavigationBar = () => {
-    const { user, logout } = useContext(AuthContext);
-    const navigate = useNavigate();
+    //useContext gestisce lo stato globale per portare dati tra tutti i componenti
+    const { user, logout } = useContext(AuthContext);  
+    const navigate = useNavigate();  //è il redirect
 
     const eventoLogout = () => {
         logout();
         navigate('/login');
     };
+
+    //rendering della navbar
     return (
         <AppBar position="static" color="secondary">
             <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>

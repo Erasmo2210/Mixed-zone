@@ -10,19 +10,19 @@ const theme = createTheme({
     palette: {
         mode: 'light',
         primary: {
-            main: '#0284c7', // Azzurro brillante (Sky Blue 600)
+            main: '#0284c7',
             light: '#38bdf8',
             dark: '#0369a1',
             contrastText: '#ffffff'
         },
         secondary: {
-            main: '#0f172a', // Navy/Slate scuro (Slate 900)
+            main: '#0f172a', 
             light: '#334155',
             dark: '#020617',
             contrastText: '#ffffff'
         },
         background: {
-            default: '#f8fafc', // Slate 50
+            default: '#f8fafc',
             paper: '#ffffff',
         },
         text: {
